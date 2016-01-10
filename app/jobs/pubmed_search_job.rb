@@ -1,4 +1,6 @@
 class PubmedSearchJob < ApplicationJob
+  require 'csv'
+
   queue_as :default
  
   SEARCH_LIMIT = 500
@@ -22,22 +24,24 @@ class PubmedSearchJob < ApplicationJob
 
     ActionCable.server.broadcast(stream, number_of_articles: number_of_articles)
 
-    search_result_export_filename = "#{Rails.root}/tmp/#{stream}"
+    search_result_export_filename = "#{Rails.root}/tmp/#{stream}.csv"
     CSV.open(search_result_export_filename, 'wb') do |csv|
       csv << HEADERS
 
       while search_result.pubmed_ids && ((offset + SEARCH_LIMIT) <= HARD_LIMIT)
-        # could broadcast a percent complete?
+        ActionCable.server.broadcast(stream, current_offset: offset)
         articles = Pubmed.fetch(search_result.pubmed_ids)
 
-        csv << [
-          article.pubmed_id
-          article.pubmed_central_id
-          article.title
-          article.author_names
-          article.publication_date
-          article.journal.title
-        ]
+        articles.each do |article|
+          csv << [
+            article.pubmed_id,
+            article.pubmed_central_id,
+            article.title,
+            article.author_names,
+            article.publication_date,
+            article.journal.title
+          ]
+        end
 
         offset += SEARCH_LIMIT
         search_result = Pubmed.search(search, offset, SEARCH_LIMIT)
@@ -47,8 +51,13 @@ class PubmedSearchJob < ApplicationJob
     search_result_export_file = File.open(search_result_export_filename)
     search_result_export = SearchResult.create(search: search, search_uuid: search_uuid, document: search_result_export_file)
 
-    download_link = Rails.application.routes.url_helpers.search_result_path(search_result_export)
+    if search_result_export
+      download_link = Rails.application.routes.url_helpers.search_result_path(search_result_export)
+      #download_link = search_result_export.document.url(:original)
 
-    ActionCable.server.broadcast(stream, status: STATUS_COMPLETE, download_link: download_link)
+      ActionCable.server.broadcast(stream, status: STATUS_COMPLETE, download_link: download_link)
+    else
+      ActionCable.server.broadcast(stream, status: STATUS_FAILED)
+    end
   end
 end
