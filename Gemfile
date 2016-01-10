@@ -10,6 +10,7 @@ gem 'jquery-rails'
 gem 'jbuilder', '~> 2.0'
 gem 'puma'
 gem 'sidekiq'
+gem 'paperclip'
 gem 'pubmed', github: 'spullen/pubmed'
 
 group :development, :test do

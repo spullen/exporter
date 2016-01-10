@@ -1,6 +1,7 @@
 App.search = null;
 
 var $search = $('#search');
+var $searchModal = $('#search-status');
 
 $search.on('keypress', function(e) {
   if(e.which === 13) {
@@ -21,18 +22,24 @@ $search.on('keypress', function(e) {
         }
       }).then(function() {
         $search.val('');
+
+        $searchModal.modal({
+          keyboard: false
+        });
       }).fail(function() {
         console.log('failed');
         App.search.unsubscribe();
         App.search = null;
       });
-
-      // display modal with spinner waiting for search download completion
     } else {
       $search.parent().addClass('has-error');
     }
     return false;
   }
+});
+
+$searchModal.on('hide.bs.modal', function() {
+  console.log('clean up');
 });
 
 function monitorSearch(searchUUID) {
@@ -49,7 +56,6 @@ function monitorSearch(searchUUID) {
     },
 
     received: function(data) {
-      console.log('received');
       console.log(data);
 
       if(data.status === 'complete') {

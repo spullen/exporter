@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
   resource :search, only: [:show, :create]
+  resources :search_results, only: [:show]
 
   root to: 'searches#show'
 
