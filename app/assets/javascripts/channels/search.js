@@ -26,8 +26,11 @@ $search.on('keypress', function(e) {
         $searchModal.modal({
           keyboard: false
         });
+
+        $searchModal.find('.loading').show();
+        $searchModal.find('.search-results').hide();
+        $searchModal.find('.search-results-download').attr('href', '#');
       }).fail(function() {
-        console.log('failed');
         App.search.unsubscribe();
         App.search = null;
       });
@@ -36,10 +39,6 @@ $search.on('keypress', function(e) {
     }
     return false;
   }
-});
-
-$searchModal.on('hide.bs.modal', function() {
-  console.log('clean up');
 });
 
 function monitorSearch(searchUUID) {
@@ -53,14 +52,26 @@ function monitorSearch(searchUUID) {
 
     disconnected: function() {
       console.log('disconnected');
+      App.search = null;
     },
 
     received: function(data) {
-      console.log(data);
-
-      if(data.status === 'complete') {
-        this.unsubscribe();
-        App.search = null;
+      switch(data.status) {
+        case 'complete':
+          this.unsubscribe();
+          App.search = null;
+          $searchModal.find('.search-results-download').attr('href', data.download_link)
+          $searchModal.find('.loading').hide();
+          $searchModal.find('.search-results').show();
+          break;
+        case 'failed':
+          this.unsubscribe();
+          App.search = null;
+          $searchModal.modal('hide');
+          // display error
+          break;
+        default:
+          console.log(data);
       }
     }
   });
