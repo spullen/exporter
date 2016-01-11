@@ -41,6 +41,11 @@ $search.on('keypress', function(e) {
   }
 });
 
+$searchModal.on('hide.bs.modal', function() {
+  console.log('search model close');
+  // handle clean up, potentially cancelling the request
+});
+
 function monitorSearch(searchUUID) {
   return App.cable.subscriptions.create({
     channel: "SearchChannel",
@@ -60,7 +65,7 @@ function monitorSearch(searchUUID) {
         case 'complete':
           this.unsubscribe();
           App.search = null;
-          $searchModal.find('.search-results-download').attr('href', data.download_link)
+          $searchModal.find('.search-results-download').attr('href', data.download_link);
           $searchModal.find('.loading').hide();
           $searchModal.find('.search-results').show();
           break;
