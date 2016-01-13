@@ -18,7 +18,7 @@ $search.on('keypress', function(e) {
         }
       }).then(function() {
         $search.val('');
-        displaySearchModal(searchUUID)
+        displaySearchModal(searchUUID);
       }).fail(function() {
         // display error
       });
