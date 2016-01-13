@@ -53,7 +53,6 @@ class PubmedSearchJob < ApplicationJob
 
     if search_result_export
       download_link = Rails.application.routes.url_helpers.search_result_path(search_result_export)
-      #download_link = search_result_export.document.url(:original)
 
       ActionCable.server.broadcast(stream, status: STATUS_COMPLETE, download_link: download_link)
     else
