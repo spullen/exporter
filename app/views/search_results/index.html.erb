@@ -1,0 +1,23 @@
+<div class="container">
+  <h1>Past Searches</h1>
+  <div class="row">
+    <div class="col-md-12">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Search Term</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @search_results.each do |search_result| -%>
+            <tr>
+              <td><%= search_result.search %></td>
+              <td><%= link_to 'Download', search_result_path(search_result), class: 'button' %></td>
+            </tr>
+          <% end -%>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
