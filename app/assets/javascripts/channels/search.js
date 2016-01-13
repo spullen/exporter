@@ -1,7 +1,4 @@
-App.search = null;
-
 var $search = $('#search');
-var $searchModal = $('#search-status');
 
 $search.on('keypress', function(e) {
   if(e.which === 13) {
@@ -11,7 +8,6 @@ $search.on('keypress', function(e) {
       $search.parent().removeClass('has-error');
       
       var searchUUID = guid();
-      App.search = monitorSearch(searchUUID);
 
       $.ajax({
         url: '/search',
@@ -22,17 +18,9 @@ $search.on('keypress', function(e) {
         }
       }).then(function() {
         $search.val('');
-
-        $searchModal.modal({
-          keyboard: false
-        });
-
-        $searchModal.find('.loading').show();
-        $searchModal.find('.search-results').hide();
-        $searchModal.find('.search-results-download').attr('href', '#');
+        displaySearchModal(searchUUID)
       }).fail(function() {
-        App.search.unsubscribe();
-        App.search = null;
+        // display error
       });
     } else {
       $search.parent().addClass('has-error');
@@ -41,13 +29,23 @@ $search.on('keypress', function(e) {
   }
 });
 
-$searchModal.on('hide.bs.modal', function() {
-  console.log('search model close');
-  // handle clean up, potentially cancelling the request
-});
+function displaySearchModal(searchUUID) {
+  var $searchModal = $('#search-status');
 
-function monitorSearch(searchUUID) {
-  return App.cable.subscriptions.create({
+  $searchModal.modal({
+    keyboard: false
+  });
+
+  $searchModal.find('.loading').show();
+  $searchModal.find('.search-results').hide();
+  $searchModal.find('.search-results-download').attr('href', '#');
+
+  $searchModal.on('hide.bs.modal', function() {
+    console.log('search model close');
+    // handle clean up, potentially cancelling the request
+  });
+
+  var search =  App.cable.subscriptions.create({
     channel: "SearchChannel",
     search_uuid: searchUUID
   }, {
@@ -57,21 +55,21 @@ function monitorSearch(searchUUID) {
 
     disconnected: function() {
       console.log('disconnected');
-      App.search = null;
+      search = null;
     },
 
     received: function(data) {
       switch(data.status) {
         case 'complete':
           this.unsubscribe();
-          App.search = null;
+          search = null;
           $searchModal.find('.search-results-download').attr('href', data.download_link);
           $searchModal.find('.loading').hide();
           $searchModal.find('.search-results').show();
           break;
         case 'failed':
           this.unsubscribe();
-          App.search = null;
+          search = null;
           $searchModal.modal('hide');
           // display error
           break;
