@@ -45,7 +45,7 @@ function displaySearchModal(searchUUID) {
     // handle clean up, potentially cancelling the request
   });
 
-  var search =  App.cable.subscriptions.create({
+  var search = App.cable.subscriptions.create({
     channel: "SearchChannel",
     search_uuid: searchUUID
   }, {
